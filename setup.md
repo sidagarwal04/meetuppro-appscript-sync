@@ -11,6 +11,19 @@
 9. Click on Run button to authorize the permissions and allow access for data via Google Apps Script if needed. Note: This activity needs to be performed manually only once.
 10. The script will generate 3 regional dashboards - AMER Dashboard, APAC Dashboard and EMEA Dashboard as per the meetup groups mapped with their regions in the "UG + Regions" sheet.
 11. You can additionally create a consolidated dashboard as per your need in a separate sheet using Google Sheet formulas.
+12. Next is to add triggers for both the scripts to run automatically one after another on the 1st of every month.
+13. Click on Triggers tab (alarm clock icon) in the left side menu and click on "Add Trigger" button at the bottom right corner.
+14. Use following settings:
+    1. Under "Choose which function to run" select "meetupquery"
+    2. Under "Choose which deployment should run" select "Head"
+    3. Under "Select event source" select "Time-driven"
+    4. Under "Select type of time based trigger" select "Month timer"
+    5. Under "Select day of month" select "1st"
+    6. Under "Select time of day" select "Midnight to 1 am"
+    7. Under "Failure notification settings" select "Notify me immediately"
+    8. Save the settings
+15. Repeat Step #13 and Step #14 after updating "Choose which function to run" to "createDashboards" and "Select time of day" to "1am to 2am"
+16. Feel free to modify above settings as per your need
 
 ## Steps to get access token
 
