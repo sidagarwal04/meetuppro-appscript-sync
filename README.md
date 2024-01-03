@@ -21,8 +21,7 @@ The only prerequisite for running this project is having [Meetup Pro account](ht
 ## Features
 There are two scripts in this project - one for fetching the latest data from Meetup Pro network and another one for creating regional and consolidated dashboards.
 1. First app script gets triggered on the 1st of every month.
-2. Fetches following data from Meetup Pro Network:
-3. Timestamp	User Group Name	Member Count	Pro Join Date	Founded Date	City	Past RSVPs	Past Event Count	Upcoming Events Count	Last Event Date
+2. Fetches following data from Meetup Pro Network: **Timestamp, User Group Name, Member Count, Pro Join Date, Founded Date, City, Past RSVPs, Past Event Count, Upcoming Events Count and Last Event Date**
 4. Dumps the fetched data into a Google Sheet creating a sheet with the current month name.
 5. Second app script gets triggered after the completion of first script on the 1st of every month.
 6. Creates regional dashboards from the latest fetched data based on pre-definied regions
