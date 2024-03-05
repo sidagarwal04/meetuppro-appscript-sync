@@ -28,3 +28,6 @@ There are two scripts in this project - one for fetching the latest data from Me
 7. A consolidated dashboard is automatically populated using Google Sheet formulas.
 
 **Note: Setup and Usage guide are available in setup.md file.**
+
+## UPDATE
+This repo now includes an [events.gs](events.gs) file to fetch all the events for the current year by the groups in the Pro Network.
