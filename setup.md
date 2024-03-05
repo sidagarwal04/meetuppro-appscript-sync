@@ -3,27 +3,32 @@
 1. Create a new [Google Sheet](https://sheets.google.com/) and create a new sheet titled "UG + Regions" with columns "UG Name" and "Region". This project has 3 regions - AMER for Americas, APAC for Asia Pacific and EMEA for Europe, Middle-East and Africa. You can modify the script to add/remove/update regions as per your need.
 2. Select "Apps Script" under the Extension tab in the top menu bar.
 3. Clear the existing/default contents in Code.gs script.
-4. Copy the code from [meetupfetch.gs](https://github.com/sidagarwal04/meetuppro-appscript-sync/blob/main/meetupfetch.gs) file in this repository and paste in the Code.gs file in the Google Apps Script Code Editor. Make sure to replace following variables with their actual values: **token**, urlname in **variables** and **spreadsheetId**. Steps for getting access token are mentioned [later](setup.md#steps-to-get-access-token).
+4. Copy the code from [meetupfetch.gs](meetupfetch.gs) file in this repository and paste in the Code.gs file in the Google Apps Script Code Editor. Make sure to replace following variables with their actual values: `**token**`, `urlname` in `**variables**` and `**spreadsheetId**`. Steps for getting access token are mentioned [later](setup.md#steps-to-get-access-token).
 5. Click on Run button to authorize the permissions and allow access for data via Google Apps Script. Note: This activity needs to be performed manually only once.
 6. The script will automatically create a new sheet with the current month name and year (eg. January 2024) and fetches information such as User Group Name, Member Count, Pro Join Date, Founded Date, City, Past RSVPs, Past Event Count, Upcoming Events Count	and Last Event Date. An additional column for "Timestamp" is appended at the start.
-7. Create a new file by clicking the plus (+) sign next to Files, select "Script" and rename the file to "Dashboard". Note: Don't add .gs extension after the file name as it will be automatically appended.
-8. Copy the code from [dashboard.gs](https://github.com/sidagarwal04/meetuppro-appscript-sync/blob/main/dashboard.gs) file in this repository and paste in the Dashboard.gs file in the Google Apps Script Code Editor.
-9. Click on Run button to authorize the permissions and allow access for data via Google Apps Script if needed. Note: This activity needs to be performed manually only once.
-10. The script will generate 3 regional dashboards - AMER Dashboard, APAC Dashboard and EMEA Dashboard as per the meetup groups mapped with their regions in the "UG + Regions" sheet.
-11. You can additionally create a consolidated dashboard as per your need in a separate sheet using Google Sheet formulas.
-12. Next is to add triggers for both the scripts to run automatically one after another on the 1st of every month.
-13. Click on Triggers tab (alarm clock icon) in the left side menu and click on "Add Trigger" button at the bottom right corner.
-14. Use following settings:
-    1. Under "Choose which function to run" select "meetupquery"
-    2. Under "Choose which deployment should run" select "Head"
-    3. Under "Select event source" select "Time-driven"
-    4. Under "Select type of time based trigger" select "Month timer"
-    5. Under "Select day of month" select "1st"
-    6. Under "Select time of day" select "Midnight to 1 am"
-    7. Under "Failure notification settings" select "Notify me immediately"
+7. Next is to add triggers for both the scripts to run automatically one after another on the 1st of every month.
+8. Click on Triggers tab (alarm clock icon) in the left side menu and click on "Add Trigger" button at the bottom right corner.
+9. Use following settings:
+    1. Under `Choose which function to run` select `meetupquery`
+    2. Under `Choose which deployment should run` select `Head`
+    3. Under `Select event source` select `Time-driven`
+    4. Under `Select type of time based trigger` select `Month timer`
+    5. Under `Select day of month` select `1st`
+    6. Under `Select time of day` select `Midnight to 1 am`
+    7. Under `Failure notification settings` select `Notify me immediately`
     8. Save the settings
-15. Repeat Step #13 and Step #14 after updating "Choose which function to run" to "createDashboards" and "Select time of day" to "1am to 2am"
-16. Feel free to modify above settings as per your need
+
+## Optional Setup
+1. Create a new file by clicking the plus (+) sign next to Files, select "Script" and rename the file to "Dashboard". Note: Don't add .gs extension after the file name as it will be automatically appended.
+2. Copy the code from [dashboard.gs](dashboard.gs) file in this repository and paste in the Dashboard.gs file in the Google Apps Script Code Editor.
+3. Click on Run button to authorize the permissions and allow access for data via Google Apps Script if needed. Note: This activity needs to be performed manually only once.
+4. The script will generate 3 regional dashboards - AMER Dashboard, APAC Dashboard and EMEA Dashboard as per the meetup groups mapped with their regions in the "UG + Regions" sheet.
+5. You can additionally create a consolidated dashboard as per your need in a separate sheet using Google Sheet formulas.
+6. Refer to steps done earlier to set the triggers and this time update `Choose which function to run` to `createDashboards` and "Select time of day" to "1am to 2am".
+7. If you wish to fetch all events in the current year by the groups part of your Meetup Pro Network, follow the previous steps to create a new file and copy the contents of [events.gs](events.gs) file and paste in the newly created script file.
+8. Make sure to replace following variables with their actual values: **token**, urlname in **variables** and **spreadsheetId**.
+9. Run the script and authorize permissions as done earlier.
+10. To set the triggers, update `Choose which function to run` to `eventsquery` and `Select time of day` to `1am to 2am` or any other settings as per your need.
 
 ## Steps to get access token
 
