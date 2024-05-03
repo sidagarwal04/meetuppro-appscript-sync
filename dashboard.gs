@@ -1,26 +1,16 @@
-function createDashboards() {
+function createRegionalDashboards() {
   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   var sheets = spreadsheet.getSheets();
   var latestSheet = null;
   var ugRegionsSheet = null;
-  var latestDate = new Date(0); // Initialize with a date far in the past
 
   // Find the UG + Regions sheet and the latest data sheet
   sheets.forEach(function(sheet) {
     var sheetName = sheet.getName();
-    if (sheetName === 'UG + Regions') {
+    if (sheetName == 'UG + Regions') {
       ugRegionsSheet = sheet;
-    } else {
-      // Improved date parsing and error handling
-      try {
-        var date = new Date(sheetName + " 1"); // Assuming the format is "Month Year"
-        if (date > latestDate) {
-          latestDate = date;
-          latestSheet = sheet;
-        }
-      } catch (e) {
-        Logger.log("Error parsing date from sheet name: " + sheetName + "; Error: " + e.message);
-      }
+    } else if (sheetName == (new Date().toLocaleString('en-US', { month: 'long' })) + " " +new Date().getFullYear()){
+      latestSheet = sheet;
     }
   });
 
@@ -29,7 +19,7 @@ function createDashboards() {
     return;
   }
 
-  var regions = ['AMER', 'APAC', 'EMEA']; //Update this if your regions are different
+  var regions = ['AMER', 'APAC', 'EMEA'];
   regions.forEach(function(region) {
     var dashboardName = region + ' Dashboard';
     var regionalDashboardSheet = spreadsheet.getSheetByName(dashboardName);
@@ -38,11 +28,11 @@ function createDashboards() {
     } else {
       regionalDashboardSheet = spreadsheet.insertSheet(dashboardName); // Create a new Dashboard sheet
     }
-    createRegionSheet(region, latestSheet, ugRegionsSheet, regionalDashboardSheet);
+    createRegionDashboardSheet(region, latestSheet, ugRegionsSheet, regionalDashboardSheet);
   });
 }
 
-function createRegionSheet(region, dataSheet, ugRegionsSheet, regionalDashboardSheet) {
+function createRegionDashboardSheet(region, dataSheet, ugRegionsSheet, regionalDashboardSheet) {
   // Extract user groups and filter by region
   var userGroups = ugRegionsSheet.getRange('A2:B' + ugRegionsSheet.getLastRow()).getValues();
   var filteredGroups = userGroups.filter(function(row) {
@@ -52,15 +42,17 @@ function createRegionSheet(region, dataSheet, ugRegionsSheet, regionalDashboardS
   });
 
   if (filteredGroups.length === 0) {
-    Logger.log("No User Groups found for " + region);
+    Logger.log("No Groups found for " + region);
     return;
   }
 
-  // Assuming the data starts at A1 and goes to C with headers in the first row
-  var range = dataSheet.getDataRange();
+  // Specify the exact data range to avoid empty rows
+  var range = dataSheet.getRange('A1:J' + dataSheet.getLastRow()); // Adjust range as per your data
   var dataValues = range.getValues();
+
+  // Filter the data based on filtered user groups
   var filteredData = dataValues.filter(function(row) {
-    return filteredGroups.includes(row[1]); // Assuming 'User Group Name' is in column B
+    return filteredGroups.includes(row[1]); // Update the column index to match the 'User Group Name' column
   });
 
   if (filteredData.length === 0) {
@@ -76,14 +68,14 @@ function createRegionSheet(region, dataSheet, ugRegionsSheet, regionalDashboardS
   }
 
   // Copy the headers from the latest sheet
-  var headers = dataSheet.getRange('B1:J1').getValues();
-  regionalDashboardSheet.getRange('A1:I1').setValues(headers);
+  var headers = dataSheet.getRange('A1:J1').getValues();
+  regionalDashboardSheet.getRange('A1:J1').setValues(headers);
 
-  // Copy only the filtered data from Column B onwards to the new sheet
+  // Copy only the filtered Column B and C data to the new sheet
   var outputData = filteredData.map(function(row) {
-    return [row[1], row[2],row[3] ,row[4],row[5],row[6],row[7],row[8],row[9]]; // Assuming 'User Group Name' is in column B, 'Member Count' is in column C and so on
+    return row;
   });
   if (outputData.length > 0) {
-    regionalDashboardSheet.getRange(2, 1, outputData.length, 9).setValues(outputData);
+    regionalDashboardSheet.getRange(2, 1, outputData.length, 10).setValues(outputData);
   }
 }
