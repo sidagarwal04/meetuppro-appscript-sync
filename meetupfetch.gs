@@ -55,7 +55,7 @@ function meetupquery() {
   var currentMonth = now.toLocaleString("default", { month: "long" }) + " " + now.getFullYear();
 
   // Open the specific spreadsheet
-  var spreadsheetId = "1MXJsfcL9HElSHiscy8yU4xZrV7zOIxYK5TjmJOXop_4";
+  var spreadsheetId = 'REPLACE WITH YOUR SPREADSHEET ID'; // Replace with your Spreadsheet ID
   var spreadsheet = SpreadsheetApp.openById(spreadsheetId);
 
   // Check if a sheet for the current month exists, if not create one
