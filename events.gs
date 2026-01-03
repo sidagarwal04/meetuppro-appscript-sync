@@ -1,111 +1,113 @@
 function eventsquery() {
   var token = 'REPLACE WITH YOUR ACTUAL TOKEN'; // Replace with your actual token
-  var ql = 'https://api.meetup.com/gql';
-  // Calculate the current year's January 1st dynamically
+  var ql = "https://api.meetup.com/gql-ext";
+
+  // Current year's Jan 1 (ISO)
   var now = new Date();
-  var currentYearFirstDay = now.getFullYear() + "-01-01";
+  var currentYearFirstDay = now.getFullYear() + "-01-01T00:00:00Z";
+
   var variables = {"urlname" : "UPDATE THIS WITH YOUR PRO NETWORK NAME", "after": "", "eventDateMin": currentYearFirstDay}; // 'after' will be used for pagination
+
+
+  // Sheet setup once
+  var sheetName = "Events " + now.getFullYear();
+  var spreadsheetId = 'REPLACE WITH YOUR SPREADSHEET ID'; // Replace with your Spreadsheet ID
+  var spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+
+  var sheet = spreadsheet.getSheetByName(sheetName);
+  if (!sheet) sheet = spreadsheet.insertSheet(sheetName);
+  else sheet.clear();
+
+  sheet.appendRow([
+    "Timestamp",
+    "Meetup Title",
+    "Meetup URL",
+    "Meetup Date & Time",
+    "Meetup Group Name",
+    "Meetup City",
+    "RSVP Count",
+    "Meetup Type"
+  ]);
 
   var continueFetching = true;
   var allRowData = [];
+
   while (continueFetching) {
-    const query = ` \
-      query ($urlname: String!, $after: String, $eventDateMin: DateTime){ \
-      proNetworkByUrlname(urlname: $urlname) { \
-        eventsSearch(filter: {eventDateMin: $eventDateMin}, input: {first: 1000, after: $after}) { \
-          count \
-          pageInfo { \
-            endCursor
-            hasNextPage
-          } \
-          edges{ \
-            node{ \
-              title \
-              eventUrl \
-              dateTime \
-              going \
-              group { \
-                name \
-                city \
-              } \
-              eventType \
-            } \
-          } \
-        } \
-      } \
-    } \
+    // Migration fix: filter moved inside input (as in Meetup guide) :contentReference[oaicite:2]{index=2}
+    const query = `
+      query ($urlname: ID!, $after: String, $eventDateMin: DateTime) {
+        proNetwork(urlname: $urlname) {
+          eventsSearch(
+            input: {
+              first: 100,
+              after: $after,
+              filter: { eventDateMin: $eventDateMin }
+            }
+          ) {
+            pageInfo { endCursor hasNextPage }
+            edges {
+              node {
+                title
+                eventUrl
+                dateTime
+                eventType
+                group { name city }
+
+                # Replace removed "going" with RSVP connection (per guide examples) :contentReference[oaicite:3]{index=3}
+                rsvps { totalCount }
+              }
+            }
+          }
+        }
+      }
     `;
 
     var response = UrlFetchApp.fetch(ql, {
-        method: "POST",
-        contentType: 'application/json', 
-        headers: { Authorization: 'Bearer ' + token},
-        payload: JSON.stringify({query: query, variables: variables})
-        });
-    if (response.getResponseCode() == 200) {
-      var data = JSON.parse(response.getContentText());
+      method: "POST",
+      contentType: "application/json",
+      headers: { Authorization: "Bearer " + token },
+      payload: JSON.stringify({ query: query, variables: variables }),
+      muteHttpExceptions: true
+    });
 
-      // Get the current year and format the sheet name as "Events X", where X is the current year.
-      var now = new Date();
-      var currentYear = now.getFullYear();
-      var sheetName = "Events " + currentYear;
+    var text = response.getContentText();
+    var payload = JSON.parse(text);
 
-      // Open the specific spreadsheet
-      var spreadsheetId = 'REPLACE WITH YOUR SPREADSHEET ID'; // Replace with your Spreadsheet ID
-      var spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+    if (payload.errors && payload.errors.length) {
+      throw new Error("GraphQL errors: " + JSON.stringify(payload.errors));
+    }
+    if (!payload.data || !payload.data.proNetwork || !payload.data.proNetwork.eventsSearch) {
+      throw new Error("Missing data.proNetwork.eventsSearch. Full response: " + text);
+    }
 
-      // Check if a sheet for "Events X" exists, if not, create one. Otherwise, clear it.
-      var sheet = spreadsheet.getSheetByName(sheetName);
-      var isNewSheet = false;
-      if (!sheet) {
-        sheet = spreadsheet.insertSheet(sheetName);
-        isNewSheet = true; // Flag to indicate a new sheet was created
-        console.log("Sheet created");
-      } else {
-        // Clear the existing data in the sheet if it already exists
-        sheet.clear();
-        // Since the sheet existed but we cleared it, we need to re-add headers
-        sheet.appendRow(["Timestamp", "Meetup Title", "Meetup URL", "Meetup Date & Time", "Meetup Group Name", "Meetup City", "RSVP Count", "Meetup Type"]);
-      }
+    var conn = payload.data.proNetwork.eventsSearch;
+    var edges = conn.edges || [];
+    var pageInfo = conn.pageInfo || {};
 
-      // If it's a new sheet, add headers
-      if (isNewSheet) {
-        sheet.appendRow(["Timestamp", "Meetup Title", "Meetup URL", "Meetup Date & Time", "Meetup Group Name", "Meetup City", "RSVP Count", "Meetup Type"]);
-      }
+    for (var i = 0; i < edges.length; i++) {
+      var node = edges[i].node;
 
-      var edges = data.data.proNetworkByUrlname.eventsSearch.edges;
-      var pageInfo = data.data.proNetworkByUrlname.eventsSearch.pageInfo;
+      allRowData.push([
+        new Date(),
+        node.title || "",
+        node.eventUrl || "",
+        node.dateTime || "",
+        (node.group && node.group.name) ? node.group.name : "",
+        (node.group && node.group.city) ? node.group.city : "",
+        (node.rsvps && node.rsvps.totalCount != null) ? node.rsvps.totalCount : "",
+        node.eventType || ""
+      ]);
+    }
 
-      // Process the date
-      for (var i = 0; i < edges.length; i++) {
-        var node = edges[i].node;
-        var rowData = [    
-          new Date(), // Current timestamp
-          node.title,
-          node.eventUrl,
-          node.dateTime,
-          node.group.name,
-          node.group.city,
-          node.going,
-          node.eventType
-        ];
-        allRowData.push(rowData); // Your existing data preparation
-      }
-
-      // Prepare for the next iteration
-      if (pageInfo.hasNextPage && pageInfo.endCursor) {
-        variables.after = pageInfo.endCursor; // Set 'after' for the next page
-      } else {
-        continueFetching = false; // Stop the loop if no more pages
-      }
+    if (pageInfo.hasNextPage && pageInfo.endCursor) {
+      variables.after = pageInfo.endCursor;
     } else {
-      // Handle errors or rate limiting
-      continueFetching = false; // Optionally retry or exit
+      continueFetching = false;
     }
   }
 
-  // Write the data to the sheet starting from the first empty row after headers
-  var startRow = sheet.getLastRow() + 1; // Find the first empty row after headers
-  var range = sheet.getRange(startRow, 1, allRowData.length, allRowData[0].length);
-  range.setValues(allRowData);
+  if (allRowData.length > 0) {
+    var startRow = sheet.getLastRow() + 1;
+    sheet.getRange(startRow, 1, allRowData.length, allRowData[0].length).setValues(allRowData);
+  }
 }
